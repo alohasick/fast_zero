@@ -12,3 +12,12 @@ def test_root_returns_ok_and_hello_world():
 
     assert response.status_code == 200
     assert response.json() == {'message': 'Olá Mundo!'}
+
+
+def test_html_returns_html():
+    client = TestClient(app)
+
+    response = client.get('/html')
+
+    assert response.status_code == 200
+    assert response.text == 'Olá Mundo!'
