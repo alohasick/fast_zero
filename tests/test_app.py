@@ -81,3 +81,18 @@ def test_update_user_not_found(client: TestClient, user_id: int):
 
     assert response.status_code == 404
     assert response.json() == {'detail': 'User not found'}
+
+
+def test_delete_user(client: TestClient):
+    response = client.delete('/users/1')
+
+    assert response.status_code == 200
+    assert response.json() == {'message': 'User deleted'}
+
+
+@pytest.mark.parametrize('user_id', [-1, 1], ids=['user_id: -1', 'user_id: 1'])
+def test_delete_user_not_found(client: TestClient, user_id: int):
+    response = client.delete(f'/users/{user_id}')
+
+    assert response.status_code == 404
+    assert response.json() == {'detail': 'User not found'}
