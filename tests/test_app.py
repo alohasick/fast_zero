@@ -51,6 +51,23 @@ def test_get_users(client: TestClient):
     }
 
 
+def test_get_user_from_id(client: TestClient):
+    response = client.get('/users/1')
+    assert response.status_code == 200
+    assert response.json() == {
+        'username': 'alice',
+        'email': 'alice@example.com',
+        'id': 1,
+    }
+
+
+@pytest.mark.parametrize('user_id', [-1, 2], ids=['user_id: -1', 'user_id: 2'])
+def test_get_not_found_user(client: TestClient, user_id: int):
+    response = client.get(f'/users/{user_id}')
+    assert response.status_code == 404
+    assert response.json() == {'detail': 'User not found'}
+
+
 def test_update_user(client: TestClient):
     response = client.put(
         '/users/1',
