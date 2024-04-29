@@ -1,7 +1,10 @@
+from http import HTTPStatus
+
 import pytest
 from fastapi.testclient import TestClient
 
 from fast_zero.app import app
+from fast_zero.models import User
 
 client = TestClient(app)
 
@@ -29,7 +32,7 @@ def test_create_user(client: TestClient):
             'password': 'secret',
         },
     )
-    assert response.status_code == 201
+    assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
         'username': 'alice',
         'email': 'alice@example.com',
@@ -37,14 +40,20 @@ def test_create_user(client: TestClient):
     }
 
 
-def test_get_users(client: TestClient):
+def test_read_users(client: TestClient):
     response = client.get('/users')
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'users': []}
+
+
+def test_read_users_with_users(client: TestClient, user: User):
+    response = client.get('/users')
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'users': [
             {
-                'username': 'alice',
-                'email': 'alice@example.com',
+                'username': 'Teste',
+                'email': 'teste@test.com',
                 'id': 1,
             }
         ]
