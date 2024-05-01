@@ -13,14 +13,14 @@ client = TestClient(app)
 def test_root_returns_ok_and_hello_world(client: TestClient):
     response = client.get('/')
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'Olá Mundo!'}
 
 
 def test_html_returns_html(client: TestClient):
     response = client.get('/html')
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.text == 'Olá Mundo!'
 
 
@@ -55,7 +55,7 @@ def test_read_users_with_users(client, user):
 
 def test_get_user_from_id(client: TestClient):
     response = client.get('/users/1')
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'username': 'alice',
         'email': 'alice@example.com',
@@ -66,7 +66,7 @@ def test_get_user_from_id(client: TestClient):
 @pytest.mark.parametrize('user_id', [-1, 2], ids=['user_id: -1', 'user_id: 2'])
 def test_get_not_found_user(client: TestClient, user_id: int):
     response = client.get(f'/users/{user_id}')
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'User not found'}
 
 
@@ -79,7 +79,7 @@ def test_update_user(client: TestClient, user: User):
             'password': 'mynewpassword',
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'username': 'bob',
         'email': 'bob@example.com',
@@ -98,14 +98,14 @@ def test_update_user_not_found(client: TestClient, user_id: int):
         },
     )
 
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_delete_user(client: TestClient):
+def test_delete_user(client: TestClient, user: User):
     response = client.delete('/users/1')
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'User deleted'}
 
 
@@ -113,5 +113,5 @@ def test_delete_user(client: TestClient):
 def test_delete_user_not_found(client: TestClient, user_id: int):
     response = client.delete(f'/users/{user_id}')
 
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'User not found'}
