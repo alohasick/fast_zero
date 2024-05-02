@@ -2,12 +2,14 @@ from http import HTTPStatus
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fast_zero.database import get_session
 from fast_zero.models import User
-from fast_zero.schemas import Message, UserList, UserPublic, UserSchema
+from fast_zero.security import get_password_hash, create_access_token, verify_password
+from fast_zero.schemas import Message, UserList, UserPublic, UserSchema, Token
 
 app = FastAPI()
 database = []
@@ -23,6 +25,26 @@ def read_root_html():
     return HTMLResponse(content='Olá Mundo!')
 
 
+@app.post('/token', response_model=Token)
+def login_for_access(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
+    user = session.scalar(select(User).where(User.email == form_data.username))
+
+    if not user:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
+                            detail='Incorrect email or password'
+                        )
+
+    if not verify_password(form_data.password, user.password):
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Incorrect email or password'
+        )
+
+    access_token = create_access_token(data={'sub': user.email})
+
+    return {'access_token': access_token, 'token_type': 'bearer'}
+
+
 @app.post('/users/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
 def create_user(user: UserSchema, session: Session = Depends(get_session)):
     db_user = session.scalar(
@@ -34,9 +56,10 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
             status_code=HTTPStatus.BAD_REQUEST,
             detail='Username already registered',
         )
-
+    
+    hashed_password = get_password_hash(user.password)
     db_user = User(
-        username=user.username, password=user.password, email=user.email
+        username=user.username, password=hashed_password, email=user.email
     )
     session.add(db_user)
     session.commit()
@@ -77,7 +100,7 @@ def update_user(
         )
 
     db_user.username = user.username
-    db_user.password = user.password
+    db_user.password = get_password_hash(user.password)
     db_user.email = user.email
     session.commit()
     session.refresh(db_user)
