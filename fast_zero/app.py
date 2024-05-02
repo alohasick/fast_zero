@@ -55,7 +55,9 @@ def read_users(
 
 @app.get('/users/{user_id}', status_code=200, response_model=UserPublic)
 def get_user(user_id: int, session: Session = Depends(get_session)):
-    db_user = session.scalars(select(User).where(User.id == user_id)).one_or_none()
+    db_user = session.scalars(
+        select(User).where(User.id == user_id)
+    ).one_or_none()
     if not db_user:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'

@@ -1,10 +1,10 @@
 from http import HTTPStatus
 
-from fast_zero.models import User
 import pytest
 from fastapi.testclient import TestClient
 
 from fast_zero.app import app
+from fast_zero.models import User
 from fast_zero.schemas import UserPublic
 
 
@@ -37,6 +37,19 @@ def test_create_user(client: TestClient):
         'email': 'alice@example.com',
         'id': 1,
     }
+
+
+def test_create_user_existing_user(client: TestClient, user: User):
+    response = client.post(
+        '/users/',
+        json={
+            'username': user.username,
+            'email': user.email,
+            'password': 'secret',
+        },
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Username already registered'}
 
 
 def test_read_users(client: TestClient):
