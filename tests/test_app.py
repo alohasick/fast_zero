@@ -7,8 +7,6 @@ from fastapi.testclient import TestClient
 from fast_zero.app import app
 from fast_zero.schemas import UserPublic
 
-client = TestClient(app)
-
 
 def test_root_returns_ok_and_hello_world(client: TestClient):
     response = client.get('/')
@@ -53,14 +51,11 @@ def test_read_users_with_users(client, user):
     assert response.json() == {'users': [user_schema]}
 
 
-def test_get_user_from_id(client: TestClient):
+def test_get_user_from_id(client: TestClient, user: User):
     response = client.get('/users/1')
+    user_schema = UserPublic.model_validate(user).model_dump()
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        'username': 'alice',
-        'email': 'alice@example.com',
-        'id': 1,
-    }
+    assert response.json() == user_schema
 
 
 @pytest.mark.parametrize('user_id', [-1, 2], ids=['user_id: -1', 'user_id: 2'])
